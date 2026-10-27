@@ -1,71 +1,20 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Money Tracker</title>
-<style>
-html, body { margin: 0; height: 100%; overflow: hidden; background: #f4f6fb; }
-iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบเบิกของใช้</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  </style>
 </head>
 <body>
-<iframe id="app" title="Money Tracker"></iframe>
-<script>
-/* ===== ตั้งค่า ===== */
-const EXEC_URL  = 'https://script.google.com/macros/s/AKfycby8YhGRKRd84klXFIFvISs4PTyYRZcCfVlgY4jwqp3iqez-Za6NA0XA3rY3VOJjAqh4/exec';             // ← ใส่ URL /exec ของ Apps Script Web App
-const TOKEN_KEY = 'moneyTracker_token';
-
-const frame = document.getElementById('app');
-
-// โหลดทุกหน้าผ่าน iframe — ส่งต่อพารามิเตอร์ เช่น ?page=report → /exec?page=report
-function loadPage(search) {
-  frame.src = EXEC_URL + (search || '');
-}
-loadPage(location.search);
-
-// ปุ่ม Back/Forward ของเบราว์เซอร์
-window.addEventListener('popstate', () => loadPage(location.search));
-
-function store(action, value) {
-  try {
-    if (action === 'get')   return localStorage.getItem(TOKEN_KEY);
-    if (action === 'set')   localStorage.setItem(TOKEN_KEY, value);
-    if (action === 'clear') localStorage.removeItem(TOKEN_KEY);
-  } catch (e) { /* localStorage ใช้ไม่ได้ (เช่นโหมดส่วนตัวบางแบบ) */ }
-  return null;
-}
-
-// รับข้อความจากหน้า Apps Script (อยู่บนโดเมน *.googleusercontent.com)
-window.addEventListener('message', (e) => {
-  let host = '';
-  try { host = new URL(e.origin).hostname; } catch (err) { return; }
-  if (!host.endsWith('.googleusercontent.com')) return;
-
-  const d = e.data || {};
-  if (d.src !== 'mt-app') return;
-
-  const reply = (data) => {
-    if (e.source) e.source.postMessage(Object.assign({ id: d.id, src: 'mt-host' }, data), e.origin);
-  };
-
-  switch (d.type) {
-    case 'getToken':   reply({ token: store('get') }); break;
-    case 'setToken':   store('set', d.token); reply({ ok: true }); break;
-    case 'clearToken': store('clear');        reply({ ok: true }); break;
-    case 'nav': {
-      // เปลี่ยนหน้า: อัปเดต URL ด้านบน + โหลด iframe ใหม่
-      const params = d.params || (d.page ? { page: d.page } : {});
-      const qs = Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '';
-      history.pushState(null, '', location.pathname + qs);
-      loadPage(qs);
-      break;
-    }
-    case 'title':
-      if (d.title) document.title = d.title;
-      break;
-  }
-});
-</script>
+  <iframe id="app"></iframe>
+  <script>
+    const EXEC_URL = 'https://script.google.com/macros/s/AKfycbyIRFG27kzYvThSDljekwdHR8PSd7P97HQQed1E4Q6VNYfGv3sHrV_FIqC979QkEPcoJQ/exec';
+    // ส่งต่อทุกพารามิเตอร์ เช่น ?page=admin → /exec?page=admin
+    document.getElementById('app').src = EXEC_URL + location.search;
+  </script>
 </body>
 </html>
